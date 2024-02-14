@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -68,14 +69,12 @@ func main() {
 	if values != nil {
 		parsedURL.RawQuery = values.Encode()
 	}
-	fmt.Println(parsedURL)
 
 	if *body != "" && isJSONContent(*contentType) {
-		jsonBody, err := json.Marshal(*body)
-		if err != nil {
+		var temp map[string]interface{}
+		if err := json.Unmarshal([]byte(*body), &temp); err != nil {
 			log.Fatalln("Couldn't marshal body:", err)
 		}
-		*body = string(jsonBody)
 	}
 
 	if *method == "" || !isAllowedMethod(*method) {
@@ -83,15 +82,16 @@ func main() {
 	}
 
 	client := &http.Client{}
-	request, err := http.NewRequest(*method, parsedURL.String(), strings.NewReader(*body))
+	request, err := http.NewRequest(*method, parsedURL.String(), bytes.NewBuffer([]byte(*body)))
 	if err != nil {
 		log.Fatalln("Couldn't create request:", err)
 	}
 
 	// check Content-Type
 	if *contentType != "" && !isAllowedContentType(*contentType) {
-		request.Header.Set("Content-Type", *contentType)
 		log.Fatalln("Unallowed content type:", *contentType)
+	} else {
+		request.Header.Add("Content-Type", *contentType)
 	}
 
 	resp, err := client.Do(request)
