@@ -22,5 +22,5 @@ go build -o req-cli
 Make a request:
 
 ```sh
-./req-cli -url=https://example.com -method=POST -content-type=application/json -body={"name":"john doe"}
+./req-cli -url=https://example.com -method=POST -content-type=application/json -body='{"name":"john doe"}'
 ```
